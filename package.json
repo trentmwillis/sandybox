@@ -1,0 +1,30 @@
+{
+  "name": "sandybox",
+  "version": "1.0.0",
+  "description": "A secure, non-blocking, performant sandbox for functions on the web",
+  "main": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "lint": "eslint '**/*.{ts,js}'",
+    "format": "prettier --write .",
+    "minify": "terser dist/index.js --compress --mangle --module -o dist/index.min.js",
+    "size": "cat dist/index.min.js | gzip -9 | wc -c",
+    "test": "",
+    "typecheck": "tsc --noEmit"
+  },
+  "author": "Trent Willis <trentmwillis@gmail.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^4.4.1",
+    "@typescript-eslint/parser": "^4.4.1",
+    "eslint": "^7.11.0",
+    "eslint-config-prettier": "^6.13.0",
+    "eslint-plugin-prettier": "^3.1.4",
+    "prettier": "^2.1.2",
+    "qunit": "^2.11.3",
+    "terser": "^5.3.5",
+    "typescript": "^4.0.3"
+  }
+}

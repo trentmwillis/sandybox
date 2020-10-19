@@ -1,0 +1,11 @@
+{
+  "compilerOptions": {
+    "declaration": true,
+    "lib": ["ES2019", "DOM"],
+    "module": "ES6",
+    "outDir": "dist",
+    "strict": true,
+    "target": "ES2019"
+  },
+  "files": ["index.ts"]
+}
