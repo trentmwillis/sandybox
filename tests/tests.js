@@ -92,6 +92,62 @@ module('Sandybox', () => {
 
       sandbox.cleanup();
     });
+
+    test('handles error in standard function', async (assert) => {
+      const sandbox = await Sandybox.create();
+      const sandboxedFunction = await sandbox.addFunction(
+        function () {
+          throw new Error('Oops!');
+        }.toString()
+      );
+
+      const result = sandboxedFunction();
+      await assert.rejects(result, new Error('Oops!'));
+
+      sandbox.cleanup();
+    });
+
+    test('handles error in async function', async (assert) => {
+      const sandbox = await Sandybox.create();
+      const sandboxedFunction = await sandbox.addFunction(
+        async function () {
+          throw new Error('Oops!');
+        }.toString()
+      );
+
+      const result = sandboxedFunction();
+      await assert.rejects(result, new Error('Oops!'));
+
+      sandbox.cleanup();
+    });
+
+    test('handles error in arrow function', async (assert) => {
+      const sandbox = await Sandybox.create();
+      const sandboxedFunction = await sandbox.addFunction(
+        (() => {
+          throw new Error('Oops!');
+        }).toString()
+      );
+
+      const result = sandboxedFunction();
+      await assert.rejects(result, new Error('Oops!'));
+
+      sandbox.cleanup();
+    });
+
+    test('handles error in async arrow function', async (assert) => {
+      const sandbox = await Sandybox.create();
+      const sandboxedFunction = await sandbox.addFunction(
+        (async () => {
+          throw new Error('Oops!');
+        }).toString()
+      );
+
+      const result = sandboxedFunction();
+      await assert.rejects(result, new Error('Oops!'));
+
+      sandbox.cleanup();
+    });
   });
 
   module('addFunction(function)', () => {
@@ -149,6 +205,54 @@ module('Sandybox', () => {
 
       const result = await sandboxedFunction('test', 3);
       assert.equal(result, 'testtesttest');
+
+      sandbox.cleanup();
+    });
+
+    test('handles error in standard function', async (assert) => {
+      const sandbox = await Sandybox.create();
+      const sandboxedFunction = await sandbox.addFunction(function () {
+        throw new Error('Oops!');
+      });
+
+      const result = sandboxedFunction();
+      await assert.rejects(result, new Error('Oops!'));
+
+      sandbox.cleanup();
+    });
+
+    test('handles error in async function', async (assert) => {
+      const sandbox = await Sandybox.create();
+      const sandboxedFunction = await sandbox.addFunction(async function () {
+        throw new Error('Oops!');
+      });
+
+      const result = sandboxedFunction();
+      await assert.rejects(result, new Error('Oops!'));
+
+      sandbox.cleanup();
+    });
+
+    test('handles error in arrow function', async (assert) => {
+      const sandbox = await Sandybox.create();
+      const sandboxedFunction = await sandbox.addFunction(() => {
+        throw new Error('Oops!');
+      });
+
+      const result = sandboxedFunction();
+      await assert.rejects(result, new Error('Oops!'));
+
+      sandbox.cleanup();
+    });
+
+    test('handles error in async arrow function', async (assert) => {
+      const sandbox = await Sandybox.create();
+      const sandboxedFunction = await sandbox.addFunction(async () => {
+        throw new Error('Oops!');
+      });
+
+      const result = sandboxedFunction();
+      await assert.rejects(result, new Error('Oops!'));
 
       sandbox.cleanup();
     });
@@ -228,6 +332,18 @@ module('Sandybox', () => {
         sandboxedFunction2(),
         new Error('Function has been removed from sandbox.')
       );
+    });
+
+    test('causes all pending invocations of addFunction to reject', async (assert) => {
+      const sandbox = await Sandybox.create();
+
+      const pending1 = sandbox.addFunction(() => 'hi');
+      const pending2 = sandbox.addFunction(() => 'hi');
+
+      sandbox.cleanup();
+
+      await assert.rejects(pending1, new Error('Sandbox has been cleaned up.'));
+      await assert.rejects(pending2, new Error('Sandbox has been cleaned up.'));
     });
 
     test('causes future invocations of addFunction to reject when invoked', async (assert) => {

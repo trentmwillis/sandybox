@@ -111,15 +111,24 @@ function iframeCode() {
               functionId: portMessage.data.functionId,
             });
           } else if (portMessage.data.type === 'execute') {
-            const result = await functions[portMessage.data.functionId](
-              ...portMessage.data.args
-            );
-            message.ports[0].postMessage({
-              type: 'resolve',
-              result,
-              functionId: portMessage.data.functionId,
-              executionId: portMessage.data.executionId,
-            });
+            try {
+              const result = await functions[portMessage.data.functionId](
+                ...portMessage.data.args
+              );
+              message.ports[0].postMessage({
+                type: 'resolve',
+                result,
+                functionId: portMessage.data.functionId,
+                executionId: portMessage.data.executionId,
+              });
+            } catch (e) {
+              message.ports[0].postMessage({
+                type: 'reject',
+                message: e.message,
+                functionId: portMessage.data.functionId,
+                executionId: portMessage.data.executionId,
+              });
+            }
           }
         };
       }
@@ -236,6 +245,13 @@ const createSandbox = (iframe: HTMLIFrameElement): Promise<Sandbox> =>
 
       cleanup() {
         if (isCleanedUp) return;
+
+        const fnInits = functionInitializations.values();
+        for (const fn of fnInits) {
+          fn({
+            data: { type: 'error', message: 'Sandbox has been cleaned up.' },
+          });
+        }
 
         const fns = functions.keys();
         for (const fn of fns) this.removeFunction(fn);
