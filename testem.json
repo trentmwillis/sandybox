@@ -1,0 +1,12 @@
+{
+  "framework": "qunit",
+  "test_page": "tests/index.html",
+  "launch_in_dev": ["Chrome"],
+  "launch_in_ci": ["Chrome"],
+  "browser_args": {
+    "chrome": {
+      "all": "--no-default-browser-check",
+      "ci": ["--headless", "--disable-gpu", "--remote-debugging-port=9222"]
+    }
+  }
+}

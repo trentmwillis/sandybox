@@ -23,6 +23,20 @@ module('Sandybox', () => {
     sandbox.cleanup();
   });
 
+  test('forwards all arguments', async (assert) => {
+    const sandbox = await Sandybox.create();
+    const sandboxedFunction = await sandbox.addFunction(function () {
+      return { args: [].slice.call(arguments) };
+    });
+
+    const result = await sandboxedFunction('hi', true, 1234, { foo: [] });
+    assert.deepEqual(result, {
+      args: ['hi', true, 1234, { foo: [] }],
+    });
+
+    sandbox.cleanup();
+  });
+
   module('addFunction(string)', () => {
     test('rejects with an error if the code is not valid', async (assert) => {
       const sandbox = await Sandybox.create();
@@ -31,6 +45,27 @@ module('Sandybox', () => {
       );
 
       await assert.rejects(result, new Error("Unexpected token ')'"));
+
+      sandbox.cleanup();
+    });
+
+    test('works with functions returned by a closure', async (assert) => {
+      const sandbox = await Sandybox.create();
+      const sandboxedFunction = await sandbox.addFunction(`
+        (() => {
+          const state = { count: 0 };
+          return increment => {
+            state.count += increment;
+            return state.count;
+          };
+        })()
+      `);
+
+      const result1 = await sandboxedFunction(10);
+      const result2 = await sandboxedFunction(5);
+
+      assert.equal(result1, 10);
+      assert.equal(result2, 15);
 
       sandbox.cleanup();
     });
@@ -299,10 +334,10 @@ module('Sandybox', () => {
   module('cleanup', () => {
     test('removes the iframe from the page', async (assert) => {
       const sandbox = await Sandybox.create();
-      assert.ok(document.querySelector('iframe'));
+      assert.ok(document.querySelector('.sandybox'));
 
       sandbox.cleanup();
-      assert.notOk(document.querySelector('iframe'));
+      assert.notOk(document.querySelector('.sandybox'));
     });
 
     test('causes all functions to be removed', async (assert) => {

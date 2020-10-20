@@ -7,8 +7,8 @@
 **Sandybox** has three primary goals, to be:
 
 1. **Sandboxed (secure)** - Functions should _not_ be able to access any same-origin information or make requests as if it were from the same-origin as the host.
-2. **Non-blocking** - Functions should not be able to block the main thread.
-3. **Performant** - Functions should be able to be created and executed with minimal overhead compared to a normal function.
+2. **Non-blocking** - Sandboxed functions should not be able to block the main thread.
+3. **Performant** - Sandboxed functions should be created and executed with minimal additional overhead compared to normal functions.
 
 In short, functions should be totally separated from the main application and thus safe to run.
 
@@ -36,7 +36,7 @@ The following are known limitations and/or explicit trade-offs of **Sandybox**:
 
 1. **No DOM access** - Given that sandboxed functions run in a web worker, there is no direct DOM access. Allowing DOM access would make it impossible to be non-blocking at this point in time.
 2. **Data limited by the [structured clone algorithm](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Structured_clone_algorithm)** - Due to running in a separate execution context, only objects that can be cloned can be sent into or received from the functions.
-3. **Functions can block each other** - While the functions are guaranteed to not block the main thread, a function in the sandbox can block another function in the sandbox. It would be impossible to guarantee this doesn't happen as browsers can only start a finite number of threads.
+3. **Functions can block each other** - While the functions are guaranteed to not block the main thread, a function in the sandbox can block another function in the sandbox. It would be impossible to guarantee this doesn't happen as browsers can only execute a finite number of threads in parallel.
 
 ## Usage
 
@@ -68,8 +68,3 @@ sandbox.cleanup();
 ```
 
 In the future, sandboxes and their functions will likely cleanup automatically by using a [FinalizationRegistry](https://github.com/tc39/proposal-weakrefs). Until then, you'll need to manually cleanup if memory usage is a concern.
-
-## Todo
-
-1. Write tests
-2. Implement test script

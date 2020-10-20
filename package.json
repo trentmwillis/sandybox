@@ -11,7 +11,8 @@
     "format": "prettier --write .",
     "minify": "terser dist/index.js --compress --mangle --module -o dist/index.min.js",
     "size": "cat dist/index.min.js | gzip -9 | wc -c",
-    "test": "",
+    "test": "testem ci",
+    "test:dev": "testem dev",
     "typecheck": "tsc --noEmit"
   },
   "author": "Trent Willis <trentmwillis@gmail.com>",
@@ -25,6 +26,7 @@
     "prettier": "^2.1.2",
     "qunit": "^2.11.3",
     "terser": "^5.3.5",
+    "testem": "^3.2.0",
     "typescript": "^4.0.3"
   }
 }
