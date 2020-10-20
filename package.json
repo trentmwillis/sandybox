@@ -1,7 +1,7 @@
 {
   "name": "sandybox",
   "version": "1.0.0",
-  "description": "A secure, non-blocking, performant sandbox for functions on the web",
+  "description": "A tiny, experimental library to allow you to execute arbitrary JavaScript functions safely in a sandbox on the web.",
   "main": "dist/index.js",
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -10,6 +10,7 @@
     "lint": "eslint '**/*.{ts,js}'",
     "format": "prettier --write .",
     "minify": "terser dist/index.js --compress --mangle --module -o dist/index.min.js",
+    "prepublishOnly": "npm run build && npm run minify",
     "size": "cat dist/index.min.js | gzip -9 | wc -c",
     "test": "testem ci",
     "test:dev": "testem dev",

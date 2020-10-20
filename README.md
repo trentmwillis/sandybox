@@ -1,6 +1,6 @@
 # Sandybox
 
-**Sandybox** is a tiny, experimental library to allow you to execute arbitrary JavaScript functions safely in a sandbox.
+**Sandybox** is a tiny, experimental library to allow you to execute arbitrary JavaScript functions safely in a sandbox on the web.
 
 ## Goals
 
