@@ -1,19 +1,25 @@
 type AnyFunction = (...args: any) => any; // eslint-disable-line @typescript-eslint/no-explicit-any
+
 type SandboxedFunction<T extends AnyFunction> = (
   ...args: Parameters<T>
 ) => Promise<ReturnType<T>>;
+
 interface Sandbox {
-  addFunction(fn: string): SandboxedFunction<(...args: unknown[]) => unknown>;
-  addFunction<T extends AnyFunction>(fn: T): SandboxedFunction<T>;
+  addFunction(
+    fn: string
+  ): Promise<SandboxedFunction<(...args: unknown[]) => unknown>>;
+  addFunction<T extends AnyFunction>(fn: T): Promise<SandboxedFunction<T>>;
   removeFunction(fn: SandboxedFunction<AnyFunction>): void;
   cleanup(): void;
 }
+
 type ExecutionRecord = {
   [executionId: string]: {
     resolve: (result: unknown) => void;
     reject: (reason: Error) => void;
   };
 };
+
 type MessageToWorker =
   | {
       type: 'create-function';
@@ -26,9 +32,15 @@ type MessageToWorker =
       functionId: number;
       executionId: number;
     };
+
 type MessageFromWorker =
   | {
+      type: 'sandbox-ready';
+      functionId: never;
+    }
+  | {
       type: 'ready';
+      functionId: number;
     }
   | {
       type: 'resolve';
@@ -41,7 +53,13 @@ type MessageFromWorker =
       functionId: number;
       executionId: number;
       message: string;
+    }
+  | {
+      type: 'error';
+      functionId: number;
+      message: string;
     };
+
 type MessageToIFrame = {
   type: 'port';
 };
@@ -72,14 +90,26 @@ function iframeCode() {
 
     self.onmessage = (message: MessageEvent<MessageToIFrame>) => {
       if (message.data.type === 'port') {
-        message.ports[0].postMessage({ type: 'ready' });
+        message.ports[0].postMessage({ type: 'sandbox-ready' });
         message.ports[0].onmessage = async (
           portMessage: MessageEvent<MessageToWorker>
         ) => {
           if (portMessage.data.type === 'create-function') {
-            functions[portMessage.data.functionId] = evalCode(
-              portMessage.data.code
-            );
+            try {
+              functions[portMessage.data.functionId] = evalCode(
+                portMessage.data.code
+              );
+            } catch (e) {
+              message.ports[0].postMessage({
+                type: 'error',
+                functionId: portMessage.data.functionId,
+                message: e.message,
+              });
+            }
+            message.ports[0].postMessage({
+              type: 'ready',
+              functionId: portMessage.data.functionId,
+            });
           } else if (portMessage.data.type === 'execute') {
             const result = await functions[portMessage.data.functionId](
               ...portMessage.data.args
@@ -132,23 +162,18 @@ const createSandbox = (iframe: HTMLIFrameElement): Promise<Sandbox> =>
     let functionIdCounter = 0;
     const functionExecutions = new Map<number, ExecutionRecord>();
     const functions = new Map<SandboxedFunction<AnyFunction>, number>();
+    const functionInitializations = new Map<number, AnyFunction>();
 
     const portToWorker = channel.port1;
 
     let isCleanedUp = false;
     const sandbox = {
-      addFunction<T extends AnyFunction>(fn: T | string) {
+      async addFunction<T extends AnyFunction>(fn: T | string) {
         if (isCleanedUp) throw new Error('Sandbox has been cleaned up.');
 
         const functionId = ++functionIdCounter;
 
         functionExecutions.set(functionId, {});
-
-        postMessageToWorker(portToWorker, {
-          type: 'create-function',
-          code: fn.toString(),
-          functionId,
-        });
 
         let executionId = 0;
 
@@ -173,7 +198,23 @@ const createSandbox = (iframe: HTMLIFrameElement): Promise<Sandbox> =>
 
         functions.set(sandboxedFunction, functionId);
 
-        return sandboxedFunction;
+        return new Promise<typeof sandboxedFunction>((resolve, reject) => {
+          const resolveHandler = (message: MessageEvent<MessageFromWorker>) => {
+            if (message.data.type === 'error') {
+              reject(new Error(message.data.message));
+            } else if (message.data.type === 'ready') {
+              resolve(sandboxedFunction);
+            }
+          };
+
+          functionInitializations.set(functionId, resolveHandler);
+
+          postMessageToWorker(portToWorker, {
+            type: 'create-function',
+            code: fn.toString(),
+            functionId,
+          });
+        });
       },
 
       removeFunction(fn: AnyFunction) {
@@ -204,21 +245,35 @@ const createSandbox = (iframe: HTMLIFrameElement): Promise<Sandbox> =>
       },
     };
 
-    portToWorker.onmessage = (message: MessageEvent<MessageFromWorker>) => {
-      if (message.data.type === 'ready') {
-        resolve(sandbox);
-      } else {
-        const executions = functionExecutions.get(message.data.functionId);
-        if (!executions) return;
-        if (message.data.type === 'resolve') {
-          executions[message.data.executionId].resolve(message.data.result);
-        } else if (message.data.type === 'reject') {
-          executions[message.data.executionId].reject(
-            new Error(message.data.message)
-          );
+    portToWorker.addEventListener(
+      'message',
+      (message: MessageEvent<MessageFromWorker>) => {
+        if (message.data.type === 'sandbox-ready') {
+          resolve(sandbox);
+        } else {
+          if (message.data.type === 'error' || message.data.type === 'ready') {
+            const resolver = functionInitializations.get(
+              message.data.functionId
+            );
+            if (!resolver) return;
+            resolver(message);
+            functionInitializations.delete(message.data.functionId);
+          }
+
+          const executions = functionExecutions.get(message.data.functionId);
+          if (!executions) return;
+          if (message.data.type === 'resolve') {
+            executions[message.data.executionId].resolve(message.data.result);
+          } else if (message.data.type === 'reject') {
+            executions[message.data.executionId].reject(
+              new Error(message.data.message)
+            );
+          }
         }
       }
-    };
+    );
+
+    portToWorker.start();
   });
 
 const Sandybox = {

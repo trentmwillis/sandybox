@@ -68,3 +68,8 @@ sandbox.cleanup();
 ```
 
 In the future, sandboxes and their functions will likely cleanup automatically by using a [FinalizationRegistry](https://github.com/tc39/proposal-weakrefs). Until then, you'll need to manually cleanup if memory usage is a concern.
+
+## Todo
+
+1. Write tests
+2. Implement test script

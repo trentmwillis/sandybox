@@ -11,5 +11,8 @@
   "rules": {
     "no-console": "error"
   },
+  "env": {
+    "browser": true
+  },
   "root": true
 }
