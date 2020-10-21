@@ -59,7 +59,7 @@ If you're finished with a function and worried about memory usage, you can use `
 sandbox.removeFunction(sandboxedFunction);
 ```
 
-Calling this will cause any unresolved executions of the function to reject. Additionally, once a function has been "removed" any calls to it will result in a rejected promise.
+Calling this will cause any unresolved executions of the function to reject. Additionally, once a function has been "removed" any calls to it will result in a rejected promise. Any rejections that are due to sandbox cleanup will be instances of `SandboxError`.
 
 Similarly, if you are finished with a sandbox you can cleanup the entire thing by calling `sandbox.cleanup()`. This will remove all functions, the iframe, and the web worker.
 
