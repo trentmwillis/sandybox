@@ -1,5 +1,5 @@
 /* global QUnit */
-import Sandybox from '../dist/index.js';
+import Sandybox, { SandboxError } from '../dist/index.js';
 
 const { module, test } = QUnit;
 
@@ -305,11 +305,11 @@ module('Sandybox', () => {
 
       await assert.rejects(
         result1,
-        new Error('Function has been removed from sandbox.')
+        new SandboxError('Function has been removed from sandbox.')
       );
       await assert.rejects(
         result2,
-        new Error('Function has been removed from sandbox.')
+        new SandboxError('Function has been removed from sandbox.')
       );
 
       sandbox.cleanup();
@@ -324,7 +324,7 @@ module('Sandybox', () => {
       const result = sandboxedFunction();
       await assert.rejects(
         result,
-        new Error('Function has been removed from sandbox.')
+        new SandboxError('Function has been removed from sandbox.')
       );
 
       sandbox.cleanup();
@@ -352,20 +352,20 @@ module('Sandybox', () => {
 
       await assert.rejects(
         pending1,
-        new Error('Function has been removed from sandbox.')
+        new SandboxError('Function has been removed from sandbox.')
       );
       await assert.rejects(
         pending2,
-        new Error('Function has been removed from sandbox.')
+        new SandboxError('Function has been removed from sandbox.')
       );
 
       await assert.rejects(
         sandboxedFunction1(),
-        new Error('Function has been removed from sandbox.')
+        new SandboxError('Function has been removed from sandbox.')
       );
       await assert.rejects(
         sandboxedFunction2(),
-        new Error('Function has been removed from sandbox.')
+        new SandboxError('Function has been removed from sandbox.')
       );
     });
 
@@ -377,8 +377,14 @@ module('Sandybox', () => {
 
       sandbox.cleanup();
 
-      await assert.rejects(pending1, new Error('Sandbox has been cleaned up.'));
-      await assert.rejects(pending2, new Error('Sandbox has been cleaned up.'));
+      await assert.rejects(
+        pending1,
+        new SandboxError('Sandbox has been cleaned up.')
+      );
+      await assert.rejects(
+        pending2,
+        new SandboxError('Sandbox has been cleaned up.')
+      );
     });
 
     test('causes future invocations of addFunction to reject when invoked', async (assert) => {
@@ -386,7 +392,10 @@ module('Sandybox', () => {
       sandbox.cleanup();
 
       const result = sandbox.addFunction(() => 'hi');
-      await assert.rejects(result, new Error('Sandbox has been cleaned up.'));
+      await assert.rejects(
+        result,
+        new SandboxError('Sandbox has been cleaned up.')
+      );
     });
   });
 });

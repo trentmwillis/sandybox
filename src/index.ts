@@ -9,7 +9,7 @@ type SandboxedFunction<T extends AnyFunction> = (
   ...args: Parameters<T>
 ) => Promise<ReturnType<T>>;
 
-interface Sandbox {
+export interface Sandbox {
   addFunction(
     fn: string
   ): Promise<SandboxedFunction<(...args: unknown[]) => unknown>>;
@@ -82,6 +82,13 @@ type MessageToIFrame = {
 /**
  * IMPLEMENTATION
  */
+
+export class SandboxError extends Error {
+  constructor(...args: string[]) {
+    super(...args);
+    this.name = 'SandboxError';
+  }
+}
 
 function iframeCode() {
   const worker = new Worker(createWorkerCode());
@@ -221,7 +228,7 @@ const createSandbox = (iframe: HTMLIFrameElement): Promise<Sandbox> =>
     let isCleanedUp = false;
     const sandbox = {
       async addFunction<T extends AnyFunction>(fn: T | string) {
-        if (isCleanedUp) throw new Error('Sandbox has been cleaned up.');
+        if (isCleanedUp) throw new SandboxError('Sandbox has been cleaned up.');
 
         const fid = ++fidCounter;
 
@@ -233,7 +240,7 @@ const createSandbox = (iframe: HTMLIFrameElement): Promise<Sandbox> =>
 
             if (!executions)
               return reject(
-                new Error('Function has been removed from sandbox.')
+                new SandboxError('Function has been removed from sandbox.')
               );
 
             executionId += 1;
@@ -278,7 +285,9 @@ const createSandbox = (iframe: HTMLIFrameElement): Promise<Sandbox> =>
             functionExecutions.delete(fid);
             Object.entries(executions).forEach(([key, { reject }]) => {
               delete executions[key];
-              reject(new Error('Function has been removed from sandbox.'));
+              reject(
+                new SandboxError('Function has been removed from sandbox.')
+              );
             });
           }
         }
@@ -289,7 +298,7 @@ const createSandbox = (iframe: HTMLIFrameElement): Promise<Sandbox> =>
 
         const fnInits = functionInitializations.values();
         for (const fn of fnInits)
-          fn.reject(new Error('Sandbox has been cleaned up.'));
+          fn.reject(new SandboxError('Sandbox has been cleaned up.'));
 
         const fns = functions.keys();
         for (const fn of fns) this.removeFunction(fn);
