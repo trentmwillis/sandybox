@@ -1,6 +1,9 @@
 # Sandybox
 
-**Sandybox** is a tiny, experimental library to allow you to execute arbitrary JavaScript functions safely in a sandbox on the web.
+[![npm version](https://badge.fury.io/js/sandybox.svg)](https://badge.fury.io/js/sandybox)
+[![build status](https://github.com/trentmwillis/sandybox/workflows/build/badge.svg?branch=master)](https://github.com/trentmwillis/sandybox/actions?query=workflow%3Abuild+branch%3Amaster)
+
+**Sandybox** is a tiny (<1.5kb), experimental library to allow you to execute arbitrary JavaScript functions safely in a sandbox on the web.
 
 ## Goals
 
