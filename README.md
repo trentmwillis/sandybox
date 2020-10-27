@@ -71,3 +71,15 @@ sandbox.cleanup();
 ```
 
 In the future, sandboxes and their functions will likely cleanup automatically by using a [FinalizationRegistry](https://github.com/tc39/proposal-weakrefs). Until then, you'll need to manually cleanup if memory usage is a concern.
+
+### Allow Same Origin
+
+While strongly recommended against, some use cases require the sandbox to run in the same origin as the host. This opens up potential attack vectors, but is still safer than evaluating code directly in your app.
+
+To allow same origin, you can pass an options hash to the `create` method and set `dangerouslyAllowSameOrigin`:
+
+```javascript
+const sameOriginSandbox = await Sandybox.create({
+  dangerouslyAllowSameOrigin: true,
+});
+```
