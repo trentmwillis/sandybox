@@ -18,6 +18,10 @@ export interface Sandbox {
   cleanup(): void;
 }
 
+interface SandboxOptions {
+  dangerouslyAllowSameOrigin?: boolean;
+}
+
 type ResolveOrReject = {
   resolve: (result?: unknown) => void;
   reject: (reason: Error) => void;
@@ -192,10 +196,14 @@ function createIFrameSrc(): string {
   return URL.createObjectURL(blob);
 }
 
-const createIFrame = (): HTMLIFrameElement => {
+const createIFrame = ({
+  dangerouslyAllowSameOrigin,
+}: SandboxOptions): HTMLIFrameElement => {
   const iframe = document.createElement('iframe');
   iframe.classList.add('sandybox');
-  iframe.setAttribute('sandbox', 'allow-scripts');
+  const sandboxAttr = ['allow-scripts'];
+  if (dangerouslyAllowSameOrigin) sandboxAttr.push('allow-same-origin');
+  iframe.setAttribute('sandbox', sandboxAttr.join(' '));
   iframe.style.display = 'none';
   iframe.src = createIFrameSrc();
   document.body.appendChild(iframe);
@@ -336,9 +344,9 @@ const createSandbox = (iframe: HTMLIFrameElement): Promise<Sandbox> =>
   });
 
 const Sandybox = {
-  create: (): Promise<Sandbox> =>
+  create: (options: SandboxOptions = {}): Promise<Sandbox> =>
     new Promise((resolve) => {
-      const iframe = createIFrame();
+      const iframe = createIFrame(options);
       iframe.onload = async () => {
         const sandbox = await createSandbox(iframe);
         resolve(sandbox);

@@ -37,6 +37,20 @@ module('Sandybox', () => {
     sandbox.cleanup();
   });
 
+  module('dangerouslyAllowSameOrigin', () => {
+    test('creates an iframe with allow-same-origin', async (assert) => {
+      const sandbox = await Sandybox.create({
+        dangerouslyAllowSameOrigin: true,
+      });
+      assert.equal(
+        document.querySelector('.sandybox').getAttribute('sandbox'),
+        'allow-scripts allow-same-origin'
+      );
+
+      sandbox.cleanup();
+    });
+  });
+
   module('addFunction(string)', () => {
     test('rejects with an error if the code is not valid', async (assert) => {
       const sandbox = await Sandybox.create();
@@ -334,7 +348,9 @@ module('Sandybox', () => {
   module('cleanup', () => {
     test('removes the iframe from the page', async (assert) => {
       const sandbox = await Sandybox.create();
-      assert.ok(document.querySelector('.sandybox'));
+      const iframe = document.querySelector('.sandybox');
+      assert.ok(iframe);
+      assert.equal(iframe.getAttribute('sandbox'), 'allow-scripts');
 
       sandbox.cleanup();
       assert.notOk(document.querySelector('.sandybox'));
