@@ -197,6 +197,25 @@ module('Sandybox', () => {
 
       sandbox.cleanup();
     });
+
+    test('handles non-clonable objects', async (assert) => {
+      const sandbox = await Sandybox.create();
+      const sandboxedFunction = await sandbox.addFunction(
+        function () {
+          return () => 'no good';
+        }.toString()
+      );
+
+      const result = sandboxedFunction();
+      await assert.rejects(
+        result,
+        new Error(
+          "A non-clonable object was returned from a sandboxed function. Original message: Failed to execute 'postMessage' on 'MessagePort': () => 'no good' could not be cloned."
+        )
+      );
+
+      sandbox.cleanup();
+    });
   });
 
   module('addFunction(function)', () => {
@@ -302,6 +321,23 @@ module('Sandybox', () => {
 
       const result = sandboxedFunction();
       await assert.rejects(result, new Error('Oops!'));
+
+      sandbox.cleanup();
+    });
+
+    test('handles non-clonable objects', async (assert) => {
+      const sandbox = await Sandybox.create();
+      const sandboxedFunction = await sandbox.addFunction(function () {
+        return () => 'no good';
+      });
+
+      const result = sandboxedFunction();
+      await assert.rejects(
+        result,
+        new Error(
+          "A non-clonable object was returned from a sandboxed function. Original message: Failed to execute 'postMessage' on 'MessagePort': () => 'no good' could not be cloned."
+        )
+      );
 
       sandbox.cleanup();
     });
