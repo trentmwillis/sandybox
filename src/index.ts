@@ -170,9 +170,28 @@ function iframeCode() {
           this.postMessage(await createFunction(data.fid, data.code));
           break;
         case 'ef': // execute
-          this.postMessage(
-            await executeFunction(data.fid, data.executionId, data.args)
-          );
+          try {
+            this.postMessage(
+              await executeFunction(data.fid, data.executionId, data.args)
+            );
+          } catch (e) {
+            if (e.name === 'DataCloneError') {
+              this.postMessage({
+                type: 'ree',
+                message: `A non-clonable object was returned from a sandboxed function. Original message: ${e.message}`,
+                fid: data.fid,
+                executionId: data.executionId,
+              });
+            } else {
+              // Unclear if this could ever actually happen...
+              this.postMessage({
+                type: 'ree',
+                message: e.message,
+                fid: data.fid,
+                executionId: data.executionId,
+              });
+            }
+          }
           break;
         case 'rf':
           removeFunction(data.fid);
