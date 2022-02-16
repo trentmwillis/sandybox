@@ -353,10 +353,13 @@ const createSandbox = (iframe: HTMLIFrameElement): Promise<Sandbox> =>
 
         const executions = functionExecutions.get(data.fid);
         if (!executions) return;
+
         if (data.type === 'rse') {
           executions[data.executionId].resolve(data.result);
+          delete executions[data.executionId];
         } else if (data.type === 'ree') {
           executions[data.executionId].reject(new Error(data.message));
+          delete executions[data.executionId];
         }
       }
     };
