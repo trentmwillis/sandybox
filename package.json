@@ -7,15 +7,17 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
-    "check": "npm run lint && npm run typecheck && npm run test",
+    "check": "npm run lint && npm run build && npm run typecheck && npm run test",
     "lint": "eslint '**/*.{ts,js}'",
     "format": "prettier --write .",
     "minify": "terser dist/index.js --compress --mangle --module -o dist/index.min.js",
-    "prepublishOnly": "npm run check && npm run build && npm run minify",
+    "prepublishOnly": "npm run minify",
     "size": "cat dist/index.min.js | gzip -9 | wc -c",
     "test": "testem ci",
     "test:dev": "testem dev",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "preversion": "npm run check",
+    "postversion": "git push && git push --tags && npm publish"
   },
   "author": "Trent Willis <trentmwillis@gmail.com>",
   "license": "MIT",
