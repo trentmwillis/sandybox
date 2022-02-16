@@ -1,6 +1,6 @@
 {
   "name": "sandybox",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "A tiny, experimental library to allow you to execute arbitrary JavaScript functions safely in a sandbox on the web.",
   "main": "dist/index.js",
   "module": "dist/index.js",
