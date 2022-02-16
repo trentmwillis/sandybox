@@ -450,4 +450,26 @@ module('Sandybox', () => {
       );
     });
   });
+
+  module('memory / performance', () => {
+    // If there is a memory leak, the following test should cause Chrome to
+    // crash. If there isn't it'll just take a little while to run.
+    test('should not leak', async (assert) => {
+      const sandbox = await Sandybox.create();
+      const sandboxedFunction = await sandbox.addFunction(function (
+        word,
+        repeat
+      ) {
+        return word.repeat(repeat);
+      });
+
+      for (let i = 0; i < 10000; i++) {
+        await sandboxedFunction('test', 100000);
+      }
+
+      assert.ok(true);
+
+      sandbox.cleanup();
+    });
+  });
 });
